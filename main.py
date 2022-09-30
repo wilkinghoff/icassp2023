@@ -660,9 +660,15 @@ for k_ensemble in np.arange(ensemble_size):
                                                                    'SCAdaCos': SCAdaCos,
                                                                    'LogMelSpectrogram': LogMelSpectrogram})
             """
+            eval_cos = -np.max(
+                np.dot(x_eval_ln[eval_labels == lab], x_train_ln[~source_train * (train_labels == lab)].transpose()),
+                axis=-1, keepdims=True)
             eval_cos = np.minimum(eval_cos,
                                   -np.max(np.dot(x_eval_ln[eval_labels == lab], means_ln.transpose()), axis=-1,
                                           keepdims=True))
+            unknown_cos = -np.max(
+                np.dot(x_unknown_ln[unknown_labels == lab], x_train_ln[~source_train * (train_labels == lab)].transpose()),
+                axis=-1, keepdims=True)
             unknown_cos = np.minimum(unknown_cos,
                                   -np.max(np.dot(x_unknown_ln[unknown_labels == lab], means_ln.transpose()), axis=-1,
                                           keepdims=True))
@@ -694,7 +700,7 @@ for k_ensemble in np.arange(ensemble_size):
             #eval_cos[~source_eval] = -np.max(np.dot(x_eval_ln[~source_eval], x_train_ln[~source_train*(train_labels==lab)].transpose()), axis=-1, keepdims=True)
             #unknown_cos[~source_unknown] = -np.max(np.dot(x_unknown_ln[~source_unknown], x_train_ln[~source_train*(train_labels==lab)].transpose()), axis=-1, keepdims=True)
 
-            #test_cos = -np.max(np.dot(x_test_ln[test_labels==lab], x_train_ln[~source_train*(train_labels==lab)].transpose()), axis=-1, keepdims=True)
+            test_cos = -np.max(np.dot(x_test_ln[test_labels==lab], x_train_ln[~source_train*(train_labels==lab)].transpose()), axis=-1, keepdims=True)
             test_cos = np.minimum(test_cos, -np.max(np.dot(x_test_ln[test_labels==lab], means_ln.transpose()), axis=-1, keepdims=True))
             """
             if np.sum(test_labels == lab) > 0:
