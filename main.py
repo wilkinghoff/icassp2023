@@ -660,6 +660,13 @@ for k_ensemble in np.arange(ensemble_size):
                                                                    'SCAdaCos': SCAdaCos,
                                                                    'LogMelSpectrogram': LogMelSpectrogram})
             """
+            eval_cos = np.minimum(eval_cos,
+                                  -np.max(np.dot(x_eval_ln[eval_labels == lab], means_ln.transpose()), axis=-1,
+                                          keepdims=True))
+            unknown_cos = np.minimum(unknown_cos,
+                                  -np.max(np.dot(x_unknown_ln[unknown_labels == lab], means_ln.transpose()), axis=-1,
+                                          keepdims=True))
+            """
             if np.sum(eval_labels==lab)>0:
                 eval_cos_target = -np.max(np.dot(x_eval_ln[eval_labels==lab], x_train_ln[~source_train*(train_labels==lab)].transpose()), axis=-1, keepdims=True)
                 unknown_cos_target = -np.max(np.dot(x_unknown_ln[unknown_labels==lab], x_train_ln[~source_train*(train_labels==lab)].transpose()), axis=-1, keepdims=True)
@@ -676,6 +683,7 @@ for k_ensemble in np.arange(ensemble_size):
                 #unknown_cos = unknown_wts*unknown_cos_source+(1-unknown_wts)*unknown_cos_target
                 eval_cos = eval_cos_source+eval_cos_target
                 unknown_cos = unknown_cos_source+unknown_cos_target
+            """
             # domain-wise evaluation
             #eval_cos[source_eval] = -np.max(np.dot(x_eval_ln[source_eval], x_train_ln[source_train*(train_labels==lab)].transpose()), axis=-1, keepdims=True)
             #unknown_cos[source_unknown] = -np.max(np.dot(x_unknown_ln[source_unknown], x_train_ln[source_train*(train_labels==lab)].transpose()), axis=-1, keepdims=True)
@@ -687,8 +695,8 @@ for k_ensemble in np.arange(ensemble_size):
             #unknown_cos[~source_unknown] = -np.max(np.dot(x_unknown_ln[~source_unknown], x_train_ln[~source_train*(train_labels==lab)].transpose()), axis=-1, keepdims=True)
 
             #test_cos = -np.max(np.dot(x_test_ln[test_labels==lab], x_train_ln[~source_train*(train_labels==lab)].transpose()), axis=-1, keepdims=True)
-            #test_cos = np.minimum(test_cos, -np.max(np.dot(x_test_ln[test_labels==lab], means_ln.transpose()), axis=-1, keepdims=True))
-
+            test_cos = np.minimum(test_cos, -np.max(np.dot(x_test_ln[test_labels==lab], means_ln.transpose()), axis=-1, keepdims=True))
+            """
             if np.sum(test_labels == lab) > 0:
                 test_cos_target = -np.max(np.dot(x_test_ln[test_labels==lab], x_train_ln[~source_train * (train_labels == lab)].transpose()), axis=-1, keepdims=True)
                 test_cos_source = -np.max(np.dot(x_test_ln[test_labels==lab], means_ln.transpose()), axis=-1, keepdims=True)
@@ -697,6 +705,7 @@ for k_ensemble in np.arange(ensemble_size):
                 test_cos = test_wts[:, 1] * test_cos_source + test_wts[:, 0] * test_cos_target
                 #test_cos = test_wts * test_cos_source + (1-test_wts) * test_cos_target
                 test_cos = test_cos_source+test_cos_target
+            """
             # domain-wise evaluation
             if np.sum(test_labels == lab) > 0:
                 source_test = np.array(pd.read_csv(
