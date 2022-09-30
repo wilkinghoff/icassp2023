@@ -609,14 +609,19 @@ for k_ensemble in np.arange(ensemble_size):
             #x_train_ln_cp *= rand_mix_coeffs
             #x_train_ln_cp += (1 - rand_mix_coeffs) * x_train_ln[~source_train * (train_labels == lab)][
             #    rand_target_idcs]
+            #x_train_ln_cp = length_norm(x_train_ln_cp)
 
             #kmeans = KMeans(n_clusters=n_subclusters, random_state=0).fit(np.concatenate([x_train_ln_cp, x_train_ln[(train_labels==lab)]], axis=0))
             kmeans = KMeans(n_clusters=n_subclusters, random_state=0).fit(x_train_ln[(train_labels == lab)])
             means_ln = length_norm(kmeans.cluster_centers_)
 
             # estimate domains
-            log_reg = LogisticRegression(random_state=0, class_weight='balanced').fit(x_train_ln[train_labels==lab], source_train[train_labels==lab])
+            #log_reg = LogisticRegression(random_state=0, class_weight='balanced').fit(np.concatenate([means_ln, x_train_ln[~source_train*(train_labels==lab)]],axis=0),
+            #                                                                          np.concatenate([np.ones(means_ln.shape[0]), np.zeros(np.sum(~source_train*(train_labels==lab)))], axis=0))
             #log_reg = SVC(kernel='linear', random_state=0, class_weight='balanced', probability=True).fit(x_train_ln[train_labels==lab], source_train[train_labels==lab])
+            log_reg = SVC(kernel='linear', random_state=0, class_weight='balanced', probability=True).fit(
+                np.concatenate([means_ln, x_train_ln[~source_train * (train_labels == lab)]], axis=0),
+                np.concatenate([np.ones(means_ln.shape[0]), np.zeros(np.sum(~source_train*(train_labels==lab)))], axis=0))
             #plt.subplot(2,2,1)
             #plt.plot(log_reg.predict_proba(x_eval_ln[eval_labels==lab]))
             #plt.subplot(2,2,2)
@@ -626,21 +631,23 @@ for k_ensemble in np.arange(ensemble_size):
             #plt.subplot(2,2,4)
             #plt.plot(source_unknown[unknown_labels==lab])
             #plt.show()
+            """
             # compile model
-            data_input, label_input, loss_output = model_emb_cnn(num_classes=2,
-                                                                 raw_dim=eval_raw.shape[1], n_subclusters=1)
+            data_input, label_input, loss_output = model_emb_cnn(num_classes=2, raw_dim=eval_raw.shape[1], n_subclusters=1)
             dom_model = tf.keras.Model(inputs=[data_input, label_input], outputs=[loss_output])
             dom_model.compile(loss=[mixupLoss], optimizer=tf.keras.optimizers.Adam())
             # fit model
             weight_path = 'wts_' + str(k+1) + 'k_' + str(target_sr) + '_' + str(k_ensemble+1) + '_domain_' + str(lab) + '.h5'
             if not os.path.isfile(weight_path):
-                class_weights = class_weight.compute_class_weight('balanced', np.unique(source_train[train_labels==lab]),
-                                                                  source_train[train_labels==lab])
-                class_weights = {i: class_weights[i] for i in np.unique(source_train[train_labels==lab])}
-                y_dom_cat = keras.utils.np_utils.to_categorical(source_train[train_labels==lab], num_classes=2)
+                y = source_train[train_labels==lab].astype(np.int32)
+                class_weights = class_weight.compute_class_weight('balanced', classes=np.unique(y), y=y)
+                class_weights = {i: class_weights[i] for i in np.unique(y)}
+                y_dom_cat = keras.utils.np_utils.to_categorical(y, num_classes=2)
+                y_dom_cat_eval = keras.utils.np_utils.to_categorical(source_eval[eval_labels==lab].astype(np.int32), num_classes=2)
                 dom_model.fit(
                     [train_raw[train_labels==lab], y_dom_cat], y_dom_cat, verbose=1,
-                    batch_size=batch_size, epochs=epochs, class_weight=class_weights)
+                    batch_size=batch_size, epochs=epochs*10, class_weight=class_weights,
+                validation_data=([eval_raw[eval_labels==lab], y_dom_cat_eval], y_dom_cat_eval))
                 dom_model.save(weight_path)
                 #model.fit(
                 #    [train_raw, y_train_cat_4train], y_train_cat_4train, verbose=1,
@@ -652,21 +659,23 @@ for k_ensemble in np.arange(ensemble_size):
                                                    custom_objects={'MixupLayer': MixupLayer, 'mixupLoss': mixupLoss,
                                                                    'SCAdaCos': SCAdaCos,
                                                                    'LogMelSpectrogram': LogMelSpectrogram})
-
+            """
             if np.sum(eval_labels==lab)>0:
-                eval_cos_target = -np.max(np.dot(x_eval_ln, x_train_ln[~source_train*(train_labels==lab)].transpose()), axis=-1, keepdims=True)
-                unknown_cos_target = -np.max(np.dot(x_unknown_ln, x_train_ln[~source_train*(train_labels==lab)].transpose()), axis=-1, keepdims=True)
-                eval_cos_source = -np.max(np.dot(x_eval_ln, means_ln.transpose()), axis=-1, keepdims=True)
-                unknown_cos_source = -np.max(np.dot(x_unknown_ln, means_ln.transpose()), axis=-1, keepdims=True)
-                #eval_wts = log_reg.predict_proba(x_eval_ln[eval_labels==lab])
-                #unknown_wts = log_reg.predict_proba(x_unknown_ln[unknown_labels==lab])
-                eval_wts = dom_model.predict(eval_raw[eval_labels==lab], np.zeros((np.sum(eval_labels==lab),2)))
-                print(eval_wts.shape)
-                unknown_wts = dom_model.predict(unknown_raw[unknown_labels == lab], np.zeros((np.sum(unknown_labels==lab),2)))
+                eval_cos_target = -np.max(np.dot(x_eval_ln[eval_labels==lab], x_train_ln[~source_train*(train_labels==lab)].transpose()), axis=-1, keepdims=True)
+                unknown_cos_target = -np.max(np.dot(x_unknown_ln[unknown_labels==lab], x_train_ln[~source_train*(train_labels==lab)].transpose()), axis=-1, keepdims=True)
+                eval_cos_source = -np.max(np.dot(x_eval_ln[eval_labels==lab], means_ln.transpose()), axis=-1, keepdims=True)
+                unknown_cos_source = -np.max(np.dot(x_unknown_ln[unknown_labels==lab], means_ln.transpose()), axis=-1, keepdims=True)
+                eval_wts = log_reg.predict_proba(x_eval_ln[eval_labels==lab])
+                unknown_wts = log_reg.predict_proba(x_unknown_ln[unknown_labels==lab])
+                #eval_wts = dom_model.predict([eval_raw[eval_labels==lab], np.zeros((np.sum(eval_labels==lab),2))], batch_size=batch_size)[:,:,0]
+                #print(eval_wts.shape)
+                #unknown_wts = dom_model.predict([unknown_raw[unknown_labels == lab], np.zeros((np.sum(unknown_labels==lab),2))], batch_size=batch_size)[:,:,0]
                 eval_cos = eval_wts[:,1]*eval_cos_source+eval_wts[:,0]*eval_cos_target
                 unknown_cos = unknown_wts[:,1]*unknown_cos_source+unknown_wts[:,0]*unknown_cos_target
                 #eval_cos = eval_wts*eval_cos_source+(1-eval_wts)*eval_cos_target
                 #unknown_cos = unknown_wts*unknown_cos_source+(1-unknown_wts)*unknown_cos_target
+                eval_cos = eval_cos_source+eval_cos_target
+                unknown_cos = unknown_cos_source+unknown_cos_target
             # domain-wise evaluation
             #eval_cos[source_eval] = -np.max(np.dot(x_eval_ln[source_eval], x_train_ln[source_train*(train_labels==lab)].transpose()), axis=-1, keepdims=True)
             #unknown_cos[source_unknown] = -np.max(np.dot(x_unknown_ln[source_unknown], x_train_ln[source_train*(train_labels==lab)].transpose()), axis=-1, keepdims=True)
@@ -683,10 +692,11 @@ for k_ensemble in np.arange(ensemble_size):
             if np.sum(test_labels == lab) > 0:
                 test_cos_target = -np.max(np.dot(x_test_ln[test_labels==lab], x_train_ln[~source_train * (train_labels == lab)].transpose()), axis=-1, keepdims=True)
                 test_cos_source = -np.max(np.dot(x_test_ln[test_labels==lab], means_ln.transpose()), axis=-1, keepdims=True)
-                #test_wts = log_reg.predict_proba(x_test_ln[test_labels == lab])
-                test_wts = dom_model.predict(x_test_ln[test_labels == lab], np.zeros((np.sum(test_labels==lab),2)))
+                test_wts = log_reg.predict_proba(x_test_ln[test_labels == lab])
+                #test_wts = dom_model.predict([test_raw[test_labels == lab], np.zeros((np.sum(test_labels==lab),2))], batch_size=batch_size)[:,:,0]
                 test_cos = test_wts[:, 1] * test_cos_source + test_wts[:, 0] * test_cos_target
                 #test_cos = test_wts * test_cos_source + (1-test_wts) * test_cos_target
+                test_cos = test_cos_source+test_cos_target
             # domain-wise evaluation
             if np.sum(test_labels == lab) > 0:
                 source_test = np.array(pd.read_csv(
@@ -703,8 +713,8 @@ for k_ensemble in np.arange(ensemble_size):
             #if np.sum(test_labels==lab)>0:
             #    test_cos = euclidean_distances(x_test_ln[test_labels==lab], means_ln)
             if np.sum(eval_labels==lab)>0:
-                pred_eval[eval_labels == lab, j] += np.min(eval_cos[eval_labels == lab], axis=-1)
-                pred_unknown[unknown_labels == lab, j] += np.min(unknown_cos[unknown_labels == lab], axis=-1)
+                pred_eval[eval_labels == lab, j] += np.min(eval_cos, axis=-1)
+                pred_unknown[unknown_labels == lab, j] += np.min(unknown_cos, axis=-1)
             if np.sum(test_labels==lab)>0:
                 pred_test[test_labels == lab, j] += np.min(test_cos, axis=-1)
         #'''
