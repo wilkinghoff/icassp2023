@@ -10,7 +10,7 @@ The implementation is based on Tensorflow 2.3 (more recent versions can run into
 
 ## Reference
 
-When reusing the code, a reference to the following paper would be appreciated:
+When reusing (parts of) the code, a reference to the following paper would be appreciated:
 
 @unpublished{wilkinghoff2023design,
   author = {Wilkinghoff, Kevin},
