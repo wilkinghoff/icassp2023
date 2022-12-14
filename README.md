@@ -6,7 +6,7 @@ Anomalous Sound Detection (ASD) system for task 2 "Unsupervised Anomalous Sound 
 
 ## Instructions
 
-The implementation is based on Tensorflow 2.3 (more recent versions can run into problems with the current implementation). Just start the main script for training and evaluation. To run the code, you need to download the development dataset, additional training dataset and the evaluation dataset, and store the files in an './eval_data' and a './dev_data' folder.
+The implementation is based on Tensorflow 2.3 (more recent versions can run into problems with the current implementation). Just start the main script for training and evaluation. To run the code, you need to download the development dataset, additional training dataset and the evaluation dataset of the DCASE 2022 ASD dataset, and store the files in an './eval_data' and a './dev_data' folder.
 
 ## Reference
 
