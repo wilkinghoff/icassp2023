@@ -15,6 +15,6 @@ When reusing (parts of) the code, a reference to the following paper would be ap
 @unpublished{wilkinghoff2023design,
   author = {Wilkinghoff, Kevin},
   title  = {Design Choices for Learning Embeddings from Auxiliary Tasks for Domain Generalization in Anomalous Sound Detection},
-  note   = {Submitted to International Conference on Acoustics, Speech and Signal Processing (ICASSP)},
+  note   = {Accepted for presentation at International Conference on Acoustics, Speech and Signal Processing (ICASSP)},
   year   = {2022}
 }
