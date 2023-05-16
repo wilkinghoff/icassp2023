@@ -12,9 +12,10 @@ The implementation is based on Tensorflow 2.3 (more recent versions can run into
 
 When reusing (parts of) the code, a reference to the following paper would be appreciated:
 
-@unpublished{wilkinghoff2023design,
+@inproceedings{wilkinghoff2023design,
   author = {Wilkinghoff, Kevin},
   title  = {Design Choices for Learning Embeddings from Auxiliary Tasks for Domain Generalization in Anomalous Sound Detection},
-  note   = {Accepted for presentation at International Conference on Acoustics, Speech and Signal Processing (ICASSP)},
-  year   = {2023}
+  booktitle = {International Conference on Acoustics, Speech and Signal Processing (ICASSP)},
+  year   = {2023},
+  publisher={IEEE}
 }
