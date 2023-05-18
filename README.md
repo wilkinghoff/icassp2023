@@ -2,7 +2,7 @@
 
 ## Description
 
-Anomalous Sound Detection (ASD) system for task 2 "Unsupervised Anomalous Sound Detection for Machine Condition Monitoring Applying Domain Generalization Techniques" of the DCASE challenge 2022 (https://dcase.community/challenge2022/task-unsupervised-anomalous-sound-detection-for-machine-condition-monitoring) achieving state-of-the-art performance. The system is a conceptually simple ASD system specifically designed for domain generalization and is trained trough an auxiliary task using the sub-cluster AdaCos loss (https://github.com/wilkinghoff/sub-cluster-AdaCos).
+Anomalous Sound Detection (ASD) system for task 2 ["Unsupervised Anomalous Sound Detection for Machine Condition Monitoring Applying Domain Generalization Techniques"](https://dcase.community/challenge2022/task-unsupervised-anomalous-sound-detection-for-machine-condition-monitoring) of the DCASE challenge 2022  achieving state-of-the-art performance. The system is a conceptually simple ASD system specifically designed for domain generalization and is trained trough an auxiliary task using the [sub-cluster AdaCos loss](https://github.com/wilkinghoff/sub-cluster-AdaCos).
 
 ## Instructions
 
